@@ -10,7 +10,8 @@ let complain s = raise (Error s)
 type var = string
 
 type value = 
-  | INT    of int 
+  | INT    of int
+  | BOOLEAN of bool 
   | CLOSURE of closure
   | LAST_ARG
 
@@ -59,6 +60,7 @@ let string_of_list sep f l =
 
 let string_of_value = function 
   | INT n     -> string_of_int n
+  | BOOLEAN b -> string_of_bool b
   | CLOSURE _ -> "Closure(...)"
   | LAST_ARG  -> "Last Argument..."
 
@@ -71,7 +73,6 @@ let string_of_instruction = function
   | BIND x -> "BIND " ^ x
   | MK_CLOSURE _ -> "CLOSURE"
   | APPLY -> "APPLY"
-
 
 let string_of_code c = string_of_list ",\n " string_of_instruction c
 let string_of_binding (x, v) = "(" ^ x ^ ", " ^ (string_of_value v) ^ ")"
@@ -96,6 +97,8 @@ let do_oper = function
   | (MULT, INT n, INT m)  ->  INT (n * m)
   | (SUB,  INT n, INT m)  ->  INT (n - m)
   | (DIV,  INT n, INT m)  ->  INT (n / m)
+  | (AND, BOOLEAN b1, BOOLEAN b2) -> BOOLEAN (b1 && b2)
+  | (OR, BOOLEAN b1, BOOLEAN b2)  -> BOOLEAN (b1 || b2)
   | (_, _, _) -> complain ("WRONG OPER")
 
 let leave_scope = [SWAP; POP]
@@ -124,6 +127,7 @@ let step = function
 (* COMPILING THE TYPES.ML TO STACK INSTRUCTIONS *)
 let rec compile = function 
   | Integer n               -> [PUSH (INT n)]
+  | Boolean b               -> [PUSH (BOOLEAN b)]
   | Var x                   -> [LOOKUP x]
   | Operator(e1, op, e2)    -> (compile e1) @ (compile e2) @ [OPER op]
   | Lambda (vars, e)        -> let bound_variables = bind_vars vars in 
