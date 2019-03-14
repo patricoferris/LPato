@@ -9,10 +9,10 @@ func add(x, y) => x + y {
 }	
 ```
 
-The add function is available within the scope of the curly brackets that follow it (and any nested function that follows. Lambda functions can be written as: 
+The add function is available within the scope of the curly brackets that follow it (and any nested function that follows). Lambda functions can be written as: 
 
 ```
-lambda (x) => lambda (y) => x + y end end 4 5 
+lambda (x) => lambda (y) => x + y end end (4) (5) 
 ```
 
 ### What's next?
