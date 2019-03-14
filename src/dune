@@ -1,0 +1,10 @@
+;; Generating the parser
+(menhir
+ (modules parser))
+
+;; Add lexer
+(ocamllex lexer)
+
+(executable
+  (name lpato)
+  (libraries core))

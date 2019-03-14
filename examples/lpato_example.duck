@@ -1,0 +1,7 @@
+func add(x, y) => x + y { 
+  func multiply(a, b) => a * b {
+    multiply(add(3, 2), add(2, 2))
+  }
+}
+
+
