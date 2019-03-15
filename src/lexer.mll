@@ -28,6 +28,9 @@ rule token = parse
   | "-" { SUB }
   | "*" { MULT }
   | "/" { DIV }
+  | "if" { IF }
+  | "then" { THEN }
+  | "else" { ELSE }
   | "&&" { AND }
   | "||" { OR }
   | "=>" { ARROW }

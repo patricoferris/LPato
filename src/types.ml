@@ -8,7 +8,7 @@ type expr =
   | Func of var * lambda * expr
   | Application of expr * (expr list)
   | Var of var
-
+  | Conditional of expr * expr * expr 
   and var = string
   and lambda = (var list) * expr
 
@@ -34,6 +34,7 @@ let rec pp_expr ppf = function
   | Func (func, (_, e1), e2)    -> fprintf ppf "(FUNC:%a(%a) => %a in %a)" fstring func fstring "tuple"  pp_expr e1 pp_expr e2
   | Application (e1, _)        -> fprintf ppf "(Applying %a)" pp_expr e1
   | Var (var) -> fstring ppf var
+  | Conditional(_, _, _) -> fstring ppf "If..."
 
 let print_expr e = 
   let _ = pp_expr std_formatter e

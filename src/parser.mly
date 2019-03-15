@@ -3,7 +3,7 @@
 %token <string> ID
 %token LPAREN LCURLY
 %token RPAREN RCURLY
-%token EOF LAMBDA ARROW END FUNC COMMA
+%token EOF LAMBDA ARROW END FUNC IF THEN ELSE COMMA
 %token ADD SUB MULT DIV AND OR 
 
 %left ADD SUB OR 
@@ -31,6 +31,7 @@ expr:
   | e1 = expr; DIV;  e2 = expr    { Types.Operator (e1, Types.DIV, e2)  }
   | e1 = expr; AND;  e2 = expr    { Types.Operator (e1, Types.AND, e2)  }
   | e1 = expr; OR;   e2 = expr    { Types.Operator (e1, Types.OR,  e2)  }
+  | IF; e1 = expr; THEN; e2 = expr; ELSE; e3 = expr; { Types.Conditional (e1, e2, e3) }
   | LAMBDA; LPAREN; idents = ident_list; RPAREN; ARROW; e = expr; END  { Types.Lambda (idents, e) }
   | FUNC; fname = ID; LPAREN; idents = ident_list; RPAREN;  ARROW; e1 = expr; LCURLY; e2 = expr; RCURLY { Types.Func (fname, (idents, e1), e2) }; 
 
