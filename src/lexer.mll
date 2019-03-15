@@ -15,6 +15,7 @@ let next_line lexbuf =
 let newline = ('\r' | '\n' | "\r\n")
 let ident_reg_exp = ['A'-'Z' 'a'-'z']+ ['0'-'9' 'A'-'Z' 'a'-'z' '_' '\'']* 
 let int_reg_exp = ['0'-'9']+
+let bool_reg_exp = ("true" | "false")
 
 rule token = parse
   | [' ' '\t']+ { token lexbuf }
@@ -27,11 +28,17 @@ rule token = parse
   | "-" { SUB }
   | "*" { MULT }
   | "/" { DIV }
+  | "if" { IF }
+  | "then" { THEN }
+  | "else" { ELSE }
+  | "&&" { AND }
+  | "||" { OR }
   | "=>" { ARROW }
   | "lambda" { LAMBDA }
   | "func" { FUNC } 
   | "end" { END }
   | int_reg_exp { INT (int_of_string (Lexing.lexeme lexbuf)) }
+  | bool_reg_exp { BOOLEAN (bool_of_string (Lexing.lexeme lexbuf)) }
   | ident_reg_exp { ID (Lexing.lexeme lexbuf) } 
   | newline { next_line lexbuf; token lexbuf }
   | eof { EOF }

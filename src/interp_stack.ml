@@ -10,7 +10,8 @@ let complain s = raise (Error s)
 type var = string
 
 type value = 
-  | INT    of int 
+  | INT    of int
+  | BOOLEAN of bool 
   | CLOSURE of closure
   | LAST_ARG
 
@@ -22,6 +23,7 @@ and instruction =
   | OPER of boper
   | SWAP
   | POP
+  | TEST of code * code
   | BIND of var 
   | MK_CLOSURE of code
   | APPLY 
@@ -59,6 +61,7 @@ let string_of_list sep f l =
 
 let string_of_value = function 
   | INT n     -> string_of_int n
+  | BOOLEAN b -> string_of_bool b
   | CLOSURE _ -> "Closure(...)"
   | LAST_ARG  -> "Last Argument..."
 
@@ -71,7 +74,7 @@ let string_of_instruction = function
   | BIND x -> "BIND " ^ x
   | MK_CLOSURE _ -> "CLOSURE"
   | APPLY -> "APPLY"
-
+  | TEST(_, _)  -> "TEST"
 
 let string_of_code c = string_of_list ",\n " string_of_instruction c
 let string_of_binding (x, v) = "(" ^ x ^ ", " ^ (string_of_value v) ^ ")"
@@ -96,6 +99,8 @@ let do_oper = function
   | (MULT, INT n, INT m)  ->  INT (n * m)
   | (SUB,  INT n, INT m)  ->  INT (n - m)
   | (DIV,  INT n, INT m)  ->  INT (n / m)
+  | (AND, BOOLEAN b1, BOOLEAN b2) -> BOOLEAN (b1 && b2)
+  | (OR, BOOLEAN b1, BOOLEAN b2)  -> BOOLEAN (b1 || b2)
   | (_, _, _) -> complain ("WRONG OPER")
 
 let leave_scope = [SWAP; POP]
@@ -115,6 +120,8 @@ let step = function
   | ((BIND x) :: codes, (EV(env)) :: (V v) :: evs)  -> (codes, EV((x, v)::env)::evs)
   | ((LOOKUP x) :: codes, evs)                    -> (codes, V(search(evs,x)) :: evs)
   | ((OPER op) :: codes, (V v1) :: (V v2) :: evs) -> (codes, V(do_oper(op, v1, v2)) :: evs)
+  | ((TEST(c1, _)) :: codes, (V BOOLEAN true) :: evs)  -> (c1 @ codes, evs)
+  | ((TEST(_, c2)) :: codes, (V BOOLEAN false) :: evs) -> (c2 @ codes, evs)
   | ((MK_CLOSURE c) :: codes, evs)                -> (codes, V(mk_function(c, evs_to_env evs)) :: evs)
   | ((APPLY :: codes), V(CLOSURE (c, env)) :: evs) -> let (values, rest) = get_values evs ([]) 
                                                       in (c @ codes,  values @ [EV env]  @ rest)
@@ -123,15 +130,17 @@ let step = function
 
 (* COMPILING THE TYPES.ML TO STACK INSTRUCTIONS *)
 let rec compile = function 
-  | Integer n               -> [PUSH (INT n)]
-  | Var x                   -> [LOOKUP x]
-  | Operator(e1, op, e2)    -> (compile e1) @ (compile e2) @ [OPER op]
-  | Lambda (vars, e)        -> let bound_variables = bind_vars vars in 
+  | Integer n                -> [PUSH (INT n)]
+  | Boolean b                -> [PUSH (BOOLEAN b)]
+  | Var x                    -> [LOOKUP x]
+  | Conditional (e1, e2, e3) -> (compile e1) @ [TEST(compile e2, compile e3)]
+  | Operator(e1, op, e2)     -> (compile e1) @ (compile e2) @ [OPER op]
+  | Lambda (vars, e)         -> let bound_variables = bind_vars vars in 
                                [MK_CLOSURE(bound_variables @ (compile e) @ leave_scope)]
-  | Func (f, (vars, e), e2) -> let bound_variables = bind_vars vars in 
+  | Func (f, (vars, e), e2)  -> let bound_variables = bind_vars vars in 
                                (MK_CLOSURE(bound_variables @ (compile e) @ leave_scope)) ::
 			       (BIND f) :: (compile e2) @ leave_scope
-  | Application (e1, e2)    -> let compiled_arguments = compile_arg e2 in
+  | Application (e1, e2)     -> let compiled_arguments = compile_arg e2 in
                                (compiled_arguments) @ (compile e1) @ [APPLY; SWAP; POP]
 
 and bind_vars = function
