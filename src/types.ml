@@ -1,4 +1,4 @@
-type boper = ADD | SUB | MULT | DIV | AND | OR;;
+type boper = ADD | SUB | MULT | DIV | AND | OR | EQUALITY | LESS;;
 
 type expr = 
   | Integer of int
@@ -25,6 +25,8 @@ let pp_bop op =
   | DIV  -> "/"
   | AND  -> "&&"
   | OR   -> "||"
+  | EQUALITY -> "=="
+  | LESS -> "<"
 
 let fstring ppf s = fprintf ppf "%s" s
 let pp_binary ppf op = fstring ppf (pp_bop op)

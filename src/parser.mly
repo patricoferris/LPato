@@ -4,7 +4,7 @@
 %token LPAREN LCURLY
 %token RPAREN RCURLY
 %token EOF LAMBDA ARROW END FUNC IF THEN ELSE COMMA SEMI DOUBLESEMI
-%token ADD SUB MULT DIV AND OR LET ASSIGN 
+%token ADD SUB MULT DIV EQUALITY LESS AND OR LET ASSIGN 
 
 %left ADD SUB OR 
 %left MULT DIV AND
@@ -31,6 +31,8 @@ expr:
   | e1 = expr; DIV;  e2 = expr    { Types.Operator (e1, Types.DIV, e2)  }
   | e1 = expr; AND;  e2 = expr    { Types.Operator (e1, Types.AND, e2)  }
   | e1 = expr; OR;   e2 = expr    { Types.Operator (e1, Types.OR,  e2)  }
+  | e1 = expr; EQUALITY; e2 = expr { Types.Operator (e1, Types.EQUALITY, e2) }
+  | e1 = expr; LESS; e2 = expr    { Types.Operator (e1, Types.LESS, e2) }
   | LET; var = ID; ASSIGN; e = expr    { Types.VariableAssign (var, e) }
   | es = expression_list          { Types.Sequence (es) }
   | IF; e1 = expr; THEN; e2 = expr; ELSE; e3 = expr; { Types.Conditional (e1, e2, e3) }
