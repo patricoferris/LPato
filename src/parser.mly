@@ -3,8 +3,8 @@
 %token <string> ID
 %token LPAREN LCURLY
 %token RPAREN RCURLY
-%token EOF LAMBDA ARROW END FUNC IF THEN ELSE COMMA
-%token ADD SUB MULT DIV AND OR 
+%token EOF LAMBDA ARROW END FUNC IF THEN ELSE COMMA SEMI DOUBLESEMI
+%token ADD SUB MULT DIV AND OR LET ASSIGN 
 
 %left ADD SUB OR 
 %left MULT DIV AND
@@ -31,9 +31,16 @@ expr:
   | e1 = expr; DIV;  e2 = expr    { Types.Operator (e1, Types.DIV, e2)  }
   | e1 = expr; AND;  e2 = expr    { Types.Operator (e1, Types.AND, e2)  }
   | e1 = expr; OR;   e2 = expr    { Types.Operator (e1, Types.OR,  e2)  }
+  | LET; var = ID; ASSIGN; e = expr    { Types.VariableAssign (var, e) }
+  | es = expression_list          { Types.Sequence (es) }
   | IF; e1 = expr; THEN; e2 = expr; ELSE; e3 = expr; { Types.Conditional (e1, e2, e3) }
   | LAMBDA; LPAREN; idents = ident_list; RPAREN; ARROW; e = expr; END  { Types.Lambda (idents, e) }
-  | FUNC; fname = ID; LPAREN; idents = ident_list; RPAREN;  ARROW; e1 = expr; LCURLY; e2 = expr; RCURLY { Types.Func (fname, (idents, e1), e2) }; 
+  | FUNC; fname = ID; LPAREN; idents = ident_list; RPAREN;  ARROW; e1 = expr; LCURLY; e2 = expr; RCURLY { Types.Func (fname, (idents, e1), e2) } 
+  | FUNC; fname = ID; LPAREN; idents = ident_list; RPAREN;  ARROW; e1 = expr; END; { Types.GlobalFunc (fname, (idents, e1)) }; 
+
+expression_list:
+  | e = expr; DOUBLESEMI       { [e] }
+  | e = expr; SEMI; rest = expression_list { e :: rest }
 
 application_list:
   | a = separated_list(COMMA, expr) { a } 
