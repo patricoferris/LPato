@@ -130,17 +130,24 @@ let step = function
 
 (* COMPILING THE TYPES.ML TO STACK INSTRUCTIONS *)
 let rec compile = function 
-  | Integer n                -> [PUSH (INT n)]
-  | Boolean b                -> [PUSH (BOOLEAN b)]
-  | Var x                    -> [LOOKUP x]
-  | Conditional (e1, e2, e3) -> (compile e1) @ [TEST(compile e2, compile e3)]
-  | Operator(e1, op, e2)     -> (compile e1) @ (compile e2) @ [OPER op]
-  | Lambda (vars, e)         -> let bound_variables = bind_vars vars in 
+  | Integer n                 -> [PUSH (INT n)]
+  | Boolean b                 -> [PUSH (BOOLEAN b)]
+  | Var x                     -> [LOOKUP x]
+  | Conditional (e1, e2, e3)  -> (compile e1) @ [TEST(compile e2, compile e3)]
+  | Operator(e1, op, e2)      -> (compile e1) @ (compile e2) @ [OPER op]
+  | VariableAssign (var, e)   -> (compile e) @ [BIND var]
+  | Sequence []               -> []
+  | Sequence [e]              -> (compile e)
+  | Sequence (e::rest)        -> (compile e)  @ (compile (Sequence rest))
+  | Lambda (vars, e)          -> let bound_variables = bind_vars vars in 
                                [MK_CLOSURE(bound_variables @ (compile e) @ leave_scope)]
-  | Func (f, (vars, e), e2)  -> let bound_variables = bind_vars vars in 
+  | Func (f, (vars, e), e2)   -> let bound_variables = bind_vars vars in 
                                (MK_CLOSURE(bound_variables @ (compile e) @ leave_scope)) ::
 			       (BIND f) :: (compile e2) @ leave_scope
-  | Application (e1, e2)     -> let compiled_arguments = compile_arg e2 in
+  | GlobalFunc (f, (vars, e)) -> let bound_variables = bind_vars vars in
+                                 (MK_CLOSURE(bound_variables @ (compile e) @ leave_scope)) :: 
+				 [(BIND f)]
+  | Application (e1, e2)      -> let compiled_arguments = compile_arg e2 in
                                (compiled_arguments) @ (compile e1) @ [APPLY; SWAP; POP]
 
 and bind_vars = function
@@ -155,10 +162,10 @@ and compile_arg = function
 let empty_env = []
 
 let rec driver n state = 
-  let _ = if false 
+  let _ = if true 
   then print_string ("N: " ^ (string_of_int n) ^ " : " ^ (string_stack state)) else ()
   in match state with
-  | ([], [V v])  -> v
+  | ([], (V v)::_)  -> v
   | _ -> driver (n + 1) (step state)
 
 let interpret_top e = 

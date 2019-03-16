@@ -12,7 +12,7 @@ let next_line lexbuf =
 
 }
 
-let newline = ('\r' | '\n' | "\r\n")
+let newline = ('\r' | '\n' | "\r\n" | "\010" | "\013")
 let ident_reg_exp = ['A'-'Z' 'a'-'z']+ ['0'-'9' 'A'-'Z' 'a'-'z' '_' '\'']* 
 let int_reg_exp = ['0'-'9']+
 let bool_reg_exp = ("true" | "false")
@@ -33,6 +33,10 @@ rule token = parse
   | "else" { ELSE }
   | "&&" { AND }
   | "||" { OR }
+  | ';'  { SEMI }
+  | ";;" { DOUBLESEMI }
+  | "let" { LET }
+  | '='  { ASSIGN }
   | "=>" { ARROW }
   | "lambda" { LAMBDA }
   | "func" { FUNC } 
@@ -40,6 +44,6 @@ rule token = parse
   | int_reg_exp { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | bool_reg_exp { BOOLEAN (bool_of_string (Lexing.lexeme lexbuf)) }
   | ident_reg_exp { ID (Lexing.lexeme lexbuf) } 
-  | newline { next_line lexbuf; token lexbuf }
+  | newline { Lexing.new_line lexbuf; token lexbuf }
   | eof { EOF }
   | _ { raise (SyntaxError ("Unexpected Char: " ^ Lexing.lexeme lexbuf)) }
