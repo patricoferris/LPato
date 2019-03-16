@@ -101,6 +101,8 @@ let do_oper = function
   | (DIV,  INT n, INT m)  ->  INT (n / m)
   | (AND, BOOLEAN b1, BOOLEAN b2) -> BOOLEAN (b1 && b2)
   | (OR, BOOLEAN b1, BOOLEAN b2)  -> BOOLEAN (b1 || b2)
+  | (EQUALITY, INT n, INT m)      -> BOOLEAN (n = m)
+  | (LESS, INT n, INT m)          -> BOOLEAN (n < m)
   | (_, _, _) -> complain ("WRONG OPER")
 
 let leave_scope = [SWAP; POP]
@@ -134,7 +136,7 @@ let rec compile = function
   | Boolean b                 -> [PUSH (BOOLEAN b)]
   | Var x                     -> [LOOKUP x]
   | Conditional (e1, e2, e3)  -> (compile e1) @ [TEST(compile e2, compile e3)]
-  | Operator(e1, op, e2)      -> (compile e1) @ (compile e2) @ [OPER op]
+  | Operator(e1, op, e2)      -> (compile e2) @ (compile e1) @ [OPER op]
   | VariableAssign (var, e)   -> (compile e) @ [BIND var]
   | Sequence []               -> []
   | Sequence [e]              -> (compile e)
@@ -162,7 +164,7 @@ and compile_arg = function
 let empty_env = []
 
 let rec driver n state = 
-  let _ = if true 
+  let _ = if false 
   then print_string ("N: " ^ (string_of_int n) ^ " : " ^ (string_stack state)) else ()
   in match state with
   | ([], (V v)::_)  -> v
